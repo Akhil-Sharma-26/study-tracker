@@ -1,34 +1,59 @@
-import GLib from 'gi://GLib';
+import GLib from 'gi://GLib'
+import Gio from 'gi://Gio'
+import St from 'gi://St';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
-const STUDY_DATA_PATH = GLib.get_user_config_dir() + '/study-tracker-data.json';
+const STUDY_DATA_PATH = GLib.get_user_config_dir() + '/study_tracker_data.json'
 
-/**
- * @class StudyTrackerExtension
- * @description A GNOME Shell extension that helps track study materials.
- * The extension adds an indicator to the GNOME shell panel that shows
- * how many study materials have been completed out of the total.
- */
-export default class StudyTrackerExtension {
+export default class StudyTrackerExtension{
+    constructor(){
+        this._indicator = null;
+        this._statusMenu = null;
+        this._fileStatus = {};
+    }
 
-  /**
- * @constructor
- * @description Initializes the extension with null values for indicator and menu,
- * and an empty object for file status tracking.
- */
-  constructor() {
-    this._indicator = null;
-    this._statusMenu = null;
-    this._fileStatus = {};
-  }
+    _saveData(){
+        const data = JSON.stringify(this._fileStatus)
+        GLib.file_set_contents(STUDY_DATA_PATH, data);
+    }
 
+    _loadData(){
+        try {
+            const file = Gio.File.new_for_path(STUDY_DATA_PATH);
+            const [success, contents] = file.load_contents(null);
+            if(success){
+                this._fileStatus = JSON.parse(new TextDecoder().decode(contents))
+            }
+        } catch (error) {
+            console.log("Error occured while loading the data", error)
+        }
+    }
+    _updateIndicator(){
+        const total = Object.keys(this._fileStatus).length;
+        const completed = Object.keys(this._fileStatus).filter(v=>v).length;
+        const label = this._indicator.get_first_child();
+        label.text = `📚 ${completed}/${total}`;
+    }
 
-  /**
- * @method _saveData
- * @private
- * @description Serializes and saves the current file status data to the file system.
- */
-  _saveData() {
-    const data = JSON.stringify(this._fileStatus);
-    GLib.file_set_contents(STUDY_DATA_PATH, data);
-  }
+    _createIndicator(){
+        this._indicator = new PanelMenu.Button(0.0, 'Study Tracker', false);
+        
+        const label = new St.Label({text: '0/0'});
+        this._indicator.add_child(label);
+        Main.panel.addToStatusArea('Study Tracker', this._indicator);
+    }
+
+    enable() {
+        this._loadData();
+        this._createIndicator();
+        this._updateIndicator();
+        // this._add;
+    }
+
+    disable() {
+        this._indicator.destroy();
+        this._indicator = null;
+    }
+    
 }

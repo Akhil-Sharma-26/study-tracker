@@ -3,7 +3,10 @@
     "name": "Study Progress Tracker",
     "description": "Track completion status of PDF/PPT files with persistent checkmarks",
     "version": 1,
-    "shell-version": ["42", "43", "44", "45", "46"],
+    "shell-version": ["42", "43", "44", "45", "46", "47", "48"],
     "url": "https://github.com/Akhil-Sharma-26/study-tracker",
     "settings-schema": "org.gnome.shell.extensions.studytracker"
   }
+
+
+  
